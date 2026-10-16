@@ -33,7 +33,7 @@ import {
   FileDown,
   Loader2
 } from 'lucide-react';
-import { exportToWord, exportToPDF, printDocumentSafe, DocumentExportData } from '../utils/documentExport';
+import { exportToWord, exportToPDF, printDocumentSafe, DocumentExportData, KOMDIGI_LOGO_SVG } from '../utils/documentExport';
 
 interface ReportDashboardProps {
   summary: TrainingSummary;
@@ -70,43 +70,46 @@ export const ReportDashboard: React.FC<ReportDashboardProps> = ({
   const [limitations, setLimitations] = useState<string[]>(analysis.limitations);
 
   // Export handlers
+  const getExportData = (): DocumentExportData => ({
+    summary,
+    stats,
+    quality,
+    executiveSummary,
+    dataQualityNarrative: analysis.dataQualityNarrative,
+    findings,
+    limitations,
+    recommendations,
+    reportStatus
+  });
+
   const handleExportWord = () => {
-    const exportData: DocumentExportData = {
-      summary,
-      stats,
-      quality,
-      executiveSummary,
-      dataQualityNarrative: analysis.dataQualityNarrative,
-      findings,
-      limitations,
-      recommendations,
-      reportStatus
-    };
+    const exportData = getExportData();
     exportToWord(exportData, `${baseExportFileName}.doc`);
-    setExportSuccessMessage('Dokumen Word (.doc) berhasil diunduh!');
+    setExportSuccessMessage('Dokumen Word (.doc) resmi berhasil diunduh!');
     setTimeout(() => setExportSuccessMessage(null), 3000);
   };
 
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
     try {
-      const success = await exportToPDF('official-document-view', `${baseExportFileName}.pdf`);
+      const exportData = getExportData();
+      const success = await exportToPDF(exportData, `${baseExportFileName}.pdf`);
       if (success) {
-        setExportSuccessMessage('Dokumen PDF (.pdf) berhasil diunduh!');
+        setExportSuccessMessage('Dokumen PDF (.pdf) resmi berhasil diunduh!');
         setTimeout(() => setExportSuccessMessage(null), 3000);
       } else {
-        printDocumentSafe('official-document-view');
+        printDocumentSafe(exportData);
       }
     } catch (e) {
       console.warn('PDF export error, falling back to safe print:', e);
-      printDocumentSafe('official-document-view');
+      printDocumentSafe(getExportData());
     } finally {
       setIsExportingPDF(false);
     }
   };
 
   const handlePrint = () => {
-    printDocumentSafe('official-document-view');
+    printDocumentSafe(getExportData());
   };
 
   // Toggle Human Review Approval
@@ -846,73 +849,126 @@ Disahkan oleh,
         } bg-white text-slate-900 rounded-2xl p-8 sm:p-12 shadow-2xl border border-slate-300 print:border-none print:shadow-none print:p-0 print:m-0`}
       >
           
-          {/* Official Kop Surat Kementerian Komunikasi dan Digital */}
-          <div className="border-b-4 border-double border-slate-900 pb-4 mb-6 text-center">
-            <div className="font-serif uppercase tracking-widest text-xs font-bold text-slate-700">
-              Kementerian Komunikasi dan Digital Republik Indonesia
+          {/* Official Kop Surat Kementerian Komunikasi dan Digital RI */}
+          <div className="mb-6">
+            <div className="flex items-center gap-4 pb-3">
+              <div 
+                className="w-20 h-20 shrink-0 flex items-center justify-center"
+                dangerouslySetInnerHTML={{ __html: KOMDIGI_LOGO_SVG }}
+              />
+              <div className="text-center flex-1 pr-14">
+                <div className="font-sans uppercase tracking-wider text-base sm:text-lg font-black text-slate-950 leading-tight">
+                  KEMENTERIAN KOMUNIKASI DAN DIGITAL RI
+                </div>
+                <div className="font-sans uppercase tracking-wide text-xs sm:text-sm font-bold text-slate-800 mt-0.5 leading-tight">
+                  BADAN PENGEMBANGAN SUMBER DAYA MANUSIA KOMUNIKASI DAN DIGITAL
+                </div>
+                <div className="font-sans uppercase tracking-wider text-sm sm:text-base font-black text-slate-900 mt-0.5 leading-tight">
+                  BALAI PELATIHAN TALENTA KOMUNIKASI DAN DIGITAL
+                </div>
+                <div className="text-[11px] text-slate-600 font-sans mt-1 leading-snug">
+                  Jl. Sekolah Hijau Kav. 2, Kawasan Industri Jababeka, Cikarang Baru, Kab. Bekasi 17530<br />
+                  Telp. (021) 28645000 | Laman: bptkd.komdigi.go.id | Pos-el: bptkd@komdigi.go.id
+                </div>
+              </div>
             </div>
-            <div className="font-serif uppercase tracking-wider text-base sm:text-lg font-black text-slate-950">
-              Balai Pelatihan Talenta Komunikasi dan Digital
-            </div>
-            <div className="text-[11px] text-slate-600 font-sans mt-0.5">
-              Jalan Perintis Kemerdekaan • Layanan Informasi & Evaluasi Pengembangan Talenta Digital
-            </div>
-            <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-              Ref: {summary.officialReference || 'B-1428/BPTKD.3/DL.02.01/09/2026'}
-            </div>
+
+            {/* Garis Pembatas Kop Surat (Double Border Gaya Kedinasan) */}
+            <div className="border-t-[3px] border-b border-slate-950 h-1 mb-6"></div>
           </div>
 
           {/* Document Title */}
           <div className="text-center my-6 space-y-1">
-            <h2 className="text-lg sm:text-xl font-bold uppercase tracking-wide text-slate-950">
-              Laporan Evaluasi Pelaksanaan Pelatihan
+            <h2 className="text-lg sm:text-xl font-bold uppercase tracking-widest text-slate-950">
+              LAPORAN
             </h2>
-            <div className="text-sm font-semibold text-slate-800">
-              Tema: "{summary.theme}" ({summary.targetBatch})
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
+              TENTANG
             </div>
-            <div className="inline-block px-3 py-0.5 rounded text-xs font-bold border uppercase tracking-wider mt-1 text-slate-700 border-slate-400">
+            <div className="text-base sm:text-lg font-black uppercase tracking-wide text-slate-950 max-w-2xl mx-auto">
+              PELAKSANAAN PELATIHAN {summary.theme.toUpperCase()}
+            </div>
+            {summary.targetBatch && (
+              <div className="text-sm font-bold text-blue-800">
+                ({summary.targetBatch})
+              </div>
+            )}
+            {summary.officialReference && (
+              <div className="text-xs font-mono text-slate-600 mt-1">
+                Nomor: {summary.officialReference}
+              </div>
+            )}
+            <div className="inline-block px-3 py-0.5 rounded text-xs font-bold border uppercase tracking-wider mt-2 text-slate-700 border-slate-400">
               Status Dokumen: {reportStatus.toUpperCase()}
             </div>
           </div>
 
-          {/* Section 1: Ringkasan Pelaksanaan */}
+          {/* BAGIAN 1: KEGIATAN YANG DILAKSANAKAN */}
           <div className="my-6 space-y-3 text-xs leading-relaxed text-slate-800">
             <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              1. Ringkasan Pelaksanaan Kegiatan
+              1. Kegiatan yang Dilaksanakan (Detail Pelaksanaan Pelatihan)
             </h3>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 font-sans">
-              <div><strong>Metode Pelatihan:</strong> {summary.method}</div>
-              <div><strong>Tanggal Pelaksanaan:</strong> {summary.startDate} s.d. {summary.endDate}</div>
-              <div><strong>Jumlah Pendaftar:</strong> {stats.summary.registeredCount} orang</div>
-              <div><strong>Jumlah Diterima:</strong> {stats.summary.acceptedCount} orang</div>
-              <div><strong>Peserta Valid Dianalisis:</strong> {stats.summary.activeCount} orang</div>
-              <div><strong>Kriteria Ambang Kelulusan:</strong> Skor Nilai ≥ {summary.passThreshold} (Skala {summary.scoreScale})</div>
-            </div>
 
-            <div className="mt-3 p-3 bg-slate-50 border border-slate-300 rounded text-slate-800">
-              <strong>Ringkasan Eksekutif:</strong> {executiveSummary}
+            <p className="text-justify text-xs leading-relaxed text-slate-800">
+              {executiveSummary}
+            </p>
+
+            {/* Tabel Parameter Pelaksanaan */}
+            <table className="w-full border-collapse border border-slate-300 text-xs">
+              <tbody>
+                <tr>
+                  <td className="w-1/3 p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Tema Pelatihan</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{summary.theme}</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Angkatan / Sasaran</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{summary.targetBatch || '-'}</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Waktu Pelaksanaan</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{summary.startDate} s.d. {summary.endDate}</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Metode Pelatihan</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{summary.method}</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Unit Penyelenggara</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{summary.organizer} (Kawasan Jababeka, Bekasi)</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Pendaftar / Diterima</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">{stats.summary.registeredCount} pendaftar / {stats.summary.acceptedCount} peserta diterima ({stats.summary.activeCount} peserta valid dianalisis)</td>
+                </tr>
+                <tr>
+                  <td className="p-2 font-bold bg-slate-50 border border-slate-300 text-slate-900">Kriteria Ambang Kelulusan</td>
+                  <td className="p-2 border border-slate-300 text-slate-800">Nilai Post-test &ge; {summary.passThreshold} (Skala {summary.scoreScale})</td>
+                </tr>
+              </tbody>
+            </table>
+
+            {/* Audit Kualitas Data Masukan */}
+            <div className="p-3 bg-slate-50 border border-slate-300 rounded text-slate-800 text-xs">
+              <strong>Pemeriksaan Integritas Data Masukan:</strong> {analysis.dataQualityNarrative}
+              {quality.minorCount > 0 && (
+                <div className="text-[11px] text-amber-800 mt-1">
+                  &bull; Sebanyak {quality.excludedParticipantCount} baris peserta dengan anomali telah dikecualikan demi menjamin validitas capaian statistik.
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Section 2: Pemeriksaan Kualitas Data */}
-          <div className="my-6 space-y-2 text-xs text-slate-800">
-            <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              2. Hasil Audit Kualitas Data Masukan (FR-02)
-            </h3>
-            <p>{analysis.dataQualityNarrative}</p>
-            {quality.minorCount > 0 && (
-              <div className="text-[11px] p-2 bg-amber-50 border border-amber-200 text-amber-900 rounded">
-                Ditemukan {quality.minorCount} anomali ringan. Sebanyak {quality.excludedParticipantCount} baris peserta dikecualikan dari kalkulasi nilai akhir agar tidak menimbulkan bias data.
-              </div>
-            )}
-          </div>
-
-          {/* Section 3: Tabel Hasil Belajar & Kelulusan */}
+          {/* BAGIAN 2: HASIL PELAKSANAAN PELATIHAN */}
           <div className="my-6 space-y-3 text-xs text-slate-800">
             <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              3. Capaian Hasil Belajar & Tingkat Kelulusan
+              2. Hasil Pelaksanaan Pelatihan
             </h3>
+
+            <p className="text-justify leading-relaxed">
+              Pelaksanaan pelatihan menunjukkan capaian yang sangat positif, baik dari peningkatan hasil pemahaman belajar peserta maupun indeks kepuasan terhadap narasumber/pengajar dan panitia penyelenggara.
+            </p>
             
+            {/* Tabel Capaian Hasil Belajar & Kelulusan */}
             <table className="w-full border-collapse border border-slate-400 text-center text-xs">
               <thead className="bg-slate-100 text-slate-900 font-bold">
                 <tr>
@@ -928,82 +984,88 @@ Disahkan oleh,
                   <td className="border border-slate-400 p-2 text-left font-medium">Nilai Rata-rata Peserta</td>
                   <td className="border border-slate-400 p-2">{stats.learningMetrics.pretest.mean}</td>
                   <td className="border border-slate-400 p-2 font-bold">{stats.learningMetrics.posttest.mean}</td>
-                  <td className="border border-slate-400 p-2 text-emerald-700 font-bold">+{stats.learningMetrics.deltaMean}</td>
+                  <td className="border border-slate-400 p-2 text-emerald-700 font-bold">+{stats.learningMetrics.deltaMean} poin</td>
                   <td className="border border-slate-400 p-2 font-bold">{stats.learningMetrics.normalizedGain.meanNGain} ({stats.learningMetrics.normalizedGain.category.split(' ')[0]})</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-400 p-2 text-left font-medium">Nilai Terendah - Tertinggi</td>
+                  <td className="border border-slate-400 p-2 text-left font-medium">Rentang Nilai (Min - Max)</td>
                   <td className="border border-slate-400 p-2">{stats.learningMetrics.pretest.min} - {stats.learningMetrics.pretest.max}</td>
                   <td className="border border-slate-400 p-2">{stats.learningMetrics.posttest.min} - {stats.learningMetrics.posttest.max}</td>
                   <td className="border border-slate-400 p-2">-</td>
                   <td className="border border-slate-400 p-2">-</td>
                 </tr>
                 <tr>
-                  <td className="border border-slate-400 p-2 text-left font-medium">Tingkat Kelulusan</td>
+                  <td className="border border-slate-400 p-2 text-left font-medium">Standar Deviasi (SD)</td>
+                  <td className="border border-slate-400 p-2">{stats.learningMetrics.pretest.stdDev}</td>
+                  <td className="border border-slate-400 p-2">{stats.learningMetrics.posttest.stdDev}</td>
+                  <td className="border border-slate-400 p-2">-</td>
+                  <td className="border border-slate-400 p-2">-</td>
+                </tr>
+                <tr className="bg-slate-50 font-medium">
+                  <td className="border border-slate-400 p-2 text-left font-bold">Tingkat Kelulusan</td>
                   <td className="border border-slate-400 p-2" colSpan={4}>
-                    Total Lulus: <strong>{stats.summary.passRate}%</strong> ({stats.summary.passedCount} orang) • Pria: {stats.summary.genderStats.malePassRate}% • Wanita: {stats.summary.genderStats.femalePassRate}%
+                    Total Lulus: <strong>{stats.summary.passRate}%</strong> ({stats.summary.passedCount} orang) &bull; Pria: {stats.summary.genderStats.malePassRate}% &bull; Wanita: {stats.summary.genderStats.femalePassRate}%
                   </td>
                 </tr>
               </tbody>
             </table>
-          </div>
 
-          {/* Section 4: Evaluasi Pengajar & Panitia */}
-          <div className="my-6 space-y-2 text-xs text-slate-800">
-            <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              4. Evaluasi Pengajar dan Panitia Penyelenggara
-            </h3>
-            <p>
-              Instruktur memperoleh skor kepuasan rerata <strong>{stats.evaluationMetrics.instructor.overallMean} dari skala {stats.evaluationMetrics.instructor.scale}</strong> ({stats.evaluationMetrics.instructor.percentage.toFixed(1)}%).
-              Panitia penyelenggara memperoleh skor rerata <strong>{stats.evaluationMetrics.committee.overallMean} dari skala {stats.evaluationMetrics.committee.scale}</strong> ({stats.evaluationMetrics.committee.percentage.toFixed(1)}%).
+            {/* Evaluasi Pengajar & Panitia */}
+            <p className="leading-relaxed">
+              <strong>Evaluasi Pengajar dan Panitia:</strong> Instruktur/narasumber memperoleh skor kepuasan rerata <strong>{stats.evaluationMetrics.instructor.overallMean} dari {stats.evaluationMetrics.instructor.scale}</strong> ({stats.evaluationMetrics.instructor.percentage.toFixed(1)}%). Sementara itu, panitia penyelenggara dan kesiapan sarana memperoleh skor rerata <strong>{stats.evaluationMetrics.committee.overallMean} dari {stats.evaluationMetrics.committee.scale}</strong> ({stats.evaluationMetrics.committee.percentage.toFixed(1)}%).
             </p>
           </div>
 
-          {/* Section 5: Temuan Utama */}
-          <div className="my-6 space-y-2 text-xs text-slate-800">
+          {/* BAGIAN 3: SIMPULAN DAN SARAN */}
+          <div className="my-6 space-y-3 text-xs text-slate-800">
             <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              5. Temuan Utama Berbasis Bukti (Keterlacakan 100%)
+              3. Simpulan dan Saran
             </h3>
+
+            {/* A. Simpulan Utama */}
+            <div className="font-bold text-blue-900">A. Simpulan Utama (Berbasis Bukti Keterlacakan 100%):</div>
             <ol className="list-decimal pl-5 space-y-2">
               {findings.map((f, idx) => (
-                <li key={idx} className="leading-relaxed">
+                <li key={idx} className="leading-relaxed text-justify">
                   <strong>[{f.category}]</strong> {f.statement}
-                  <div className="text-[11px] text-slate-600 italic">
+                  <div className="text-[11px] text-slate-500 italic">
                     Sumber Data Rujukan: {f.sourceData}
                   </div>
                 </li>
               ))}
             </ol>
-          </div>
 
-          {/* Section 6: Keterbatasan Analisis */}
-          <div className="my-6 space-y-2 text-xs text-slate-800">
-            <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              6. Pernyataan Keterbatasan Analisis
-            </h3>
+            {/* B. Keterbatasan Analisis */}
+            <div className="font-bold text-blue-900 pt-2">B. Pernyataan Keterbatasan Analisis:</div>
             <ul className="list-disc pl-5 space-y-1 text-slate-700 text-[11.5px]">
               {limitations.map((lim, idx) => (
                 <li key={idx}>{lim}</li>
               ))}
             </ul>
-          </div>
 
-          {/* Section 7: Rekomendasi */}
-          <div className="my-6 space-y-2 text-xs text-slate-800">
-            <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
-              7. Rekomendasi Perbaikan untuk Penyelenggaraan Berikutnya
-            </h3>
+            {/* C. Rekomendasi */}
+            <div className="font-bold text-blue-900 pt-2">C. Saran dan Rekomendasi Tindak Lanjut:</div>
             <ol className="list-decimal pl-5 space-y-1.5">
               {recommendations.map((r, idx) => (
-                <li key={idx}>
+                <li key={idx} className="leading-relaxed text-justify">
                   <strong>[{r.area} - Prioritas {r.priority}]</strong> {r.action}
-                  <div className="text-[11px] text-slate-600">Dasar Pertimbangan: {r.rationale}</div>
+                  <div className="text-[11px] text-slate-500">Dasar Pertimbangan: {r.rationale}</div>
                 </li>
               ))}
             </ol>
           </div>
 
-          {/* Signatures Block for Official Balai Report */}
+          {/* BAGIAN 4: PENUTUP */}
+          <div className="my-6 space-y-2 text-xs text-slate-800">
+            <h3 className="font-bold text-sm uppercase border-b border-slate-400 pb-1 text-slate-950">
+              4. Penutup
+            </h3>
+            <p className="leading-relaxed text-justify">
+              Demikian laporan pelaksanaan pelatihan ini disusun sebagai bahan pertanggungjawaban dan evaluasi berkala bagi pimpinan. Atas perhatian dan kerja sama yang baik, kami menyampaikan terima kasih.
+            </p>
+          </div>
+
+          {/* Signatures Block for Official Balai Report (TANPA NIP) */}
           <div className="mt-12 pt-6 border-t border-slate-300 grid grid-cols-2 gap-8 text-center text-xs text-slate-800">
             <div className="space-y-16">
               <div>
